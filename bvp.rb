@@ -3,6 +3,7 @@
 require 'open-uri'
 require 'csv'
 require 'optparse'
+require 'json'
 
 region = 'ww'
 start_date = Date.today.prev_year
@@ -24,13 +25,10 @@ OptionParser.new do |opts|
   end
 end.parse!
 
-meta = {
-  'Chrome' => [30, 35],
-  'Firefox' => [5, 24, 31],
-  'IE' => [8, 9, 10],
-  'Safari' => [6.0, 7.0],
-  'Opera' => [12, 15],
-}
+filename = "meta.#{region}.json"
+filename = "meta.default.json" unless File.exist?(filename)
+
+meta = JSON.parse(IO.read(filename))
 
 browsers = {}
 
