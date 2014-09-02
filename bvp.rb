@@ -4,6 +4,7 @@ require 'open-uri'
 require 'csv'
 require 'optparse'
 require 'json'
+# require 'byebug'
 
 region = 'ww'
 start_date = Date.today.prev_year
