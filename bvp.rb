@@ -21,8 +21,8 @@ OptionParser.new do |opts|
     end_date = Date.parse(v)
   end
 
-  opts.on("-r", "--region ww/BY/etc", "region, default ww") do |v|
-    region = v
+  opts.on("-r", "--region ww/by/etc", "region, default ww") do |v|
+    region = v.downcase
   end
 end.parse!
 
