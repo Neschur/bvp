@@ -57,14 +57,34 @@ months.each do |date|
         browsers[bname][year][month] = ((browsers[bname][year][month] || 0) + percents).round(2)
       end
       version = versions[0]
-      push_browser.call("#{bname} < #{version}") if bversion < version && bversion > 0
+      push_browser.call([bname, 0, version]) if bversion < version && bversion > 0
       versions[1..-1].each_with_index do |version, i|
-        push_browser.call("#{bname} #{versions[i]} - #{version}") if bversion < version && bversion >= versions[i]
+        push_browser.call([bname, versions[i], version]) if bversion < version && bversion >= versions[i]
       end
       version = versions[-1]
-      push_browser.call("#{bname} #{version}+") if bversion >= version
+      push_browser.call([bname, version]) if bversion >= version
     end
   end
+end
+
+sorted_browsers = browsers.sort do |a1, a2|
+  result = a1.first.first[0].ord - a2.first.first[0].ord
+  result = a1.first[1] - a2.first[1] if result == 0
+  result
+end
+
+browsers = {}
+
+sorted_browsers.each do |key, value|
+  if key.length == 2
+    new_key = "#{key[0]} #{key[1]}+"
+  elsif key[1] == 0
+    new_key = "#{key[0]} < #{key[2]}"
+  else
+    new_key = "#{key[0]} #{key[1]} -< #{key[2]}"
+  end
+
+  browsers[new_key] = value
 end
 
 csv_string = CSV.generate do |csv|
