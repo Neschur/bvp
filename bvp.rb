@@ -56,10 +56,20 @@ months.each do |date|
         browsers[bname][year] ||= {}
         browsers[bname][year][month] = ((browsers[bname][year][month] || 0) + percents).round(2)
       end
+
       version = versions[0]
+      version = version['single'] if version.is_a?(Hash)
       push_browser.call([bname, 0, version]) if bversion < version && bversion > 0
       versions[1..-1].each_with_index do |version, i|
-        push_browser.call([bname, versions[i], version]) if bversion < version && bversion >= versions[i]
+        version = version['single'] if version.is_a?(Hash)
+        if versions[i].is_a?(Hash)
+          versionsi = versions[i]['single']
+          version_named = versionsi
+        else
+          versionsi = versions[i]
+          version_named = version
+        end
+        push_browser.call([bname, versionsi, version_named]) if bversion < version && bversion >= versionsi
       end
       version = versions[-1]
       push_browser.call([bname, version]) if bversion >= version
@@ -80,6 +90,8 @@ sorted_browsers.each do |key, value|
     new_key = "#{key[0]} #{key[1]}+"
   elsif key[1] == 0
     new_key = "#{key[0]} < #{key[2]}"
+  elsif key[1] == key[2]
+    new_key = "#{key[0]} #{key[1]}"
   else
     new_key = "#{key[0]} #{key[1]} -< #{key[2]}"
   end
