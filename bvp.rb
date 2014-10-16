@@ -6,6 +6,7 @@ require 'optparse'
 require 'json'
 # require 'byebug'
 
+# Part 1 - initializing
 region = 'ww'
 start_date = Date.today.prev_year
 end_date = Date.today
@@ -35,6 +36,8 @@ browsers = {}
 
 months = (start_date..end_date).select{|date| date.day == 1}
 
+# Part 2 - calculation version
+
 months.each do |date|
   year = date.year
   month = date.month
@@ -59,16 +62,16 @@ months.each do |date|
       end
 
       version = versions[0]
-      version = version['single'] if version.is_a?(Hash)
+      version = version['version'] if version.is_a?(Hash)
       push_browser.call([bname, 0, version]) if bversion < version && bversion > 0
       versions[1..-1].each_with_index do |version, i|
-        version = version['single'] if version.is_a?(Hash)
+        version = version['version'] if version.is_a?(Hash)
+        version_named = version
         if versions[i].is_a?(Hash)
-          versionsi = versions[i]['single']
-          version_named = versionsi
+          versionsi = versions[i]['version']
+          version_named = versionsi if versions[i]['single']
         else
           versionsi = versions[i]
-          version_named = version
         end
         push_browser.call([bname, versionsi, version_named]) if bversion < version && bversion >= versionsi
       end
@@ -77,6 +80,8 @@ months.each do |date|
     end
   end
 end
+
+# Part 3 - Sorting, humanize, output
 
 sorted_browsers = browsers.sort do |a1, a2|
   result = a1.first.first[0].ord - a2.first.first[0].ord
@@ -94,7 +99,7 @@ sorted_browsers.each do |key, value|
   elsif key[1] == key[2]
     new_key = "#{key[0]} #{key[1]}"
   else
-    new_key = "#{key[0]} #{key[1]} -< #{key[2]}"
+    new_key = "#{key[0]} #{key[1]} - <#{key[2]}"
   end
 
   browsers[new_key] = value

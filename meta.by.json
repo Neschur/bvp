@@ -1,7 +1,14 @@
 {
   "Chrome": [30, 35],
   "Firefox": [5, 24, 31],
-  "IE": [{"single":8}, {"single":9}, 10],
+  "IE": [
+    {"version":8, "single":true},
+    {"version":9, "single":true},
+    10
+  ],
   "Safari": [5.1],
-  "Opera": [12, 15]
+  "Opera": [
+    {"version":12, "name":"12.x"},
+    15
+  ]
 }
