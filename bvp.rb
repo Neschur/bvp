@@ -41,43 +41,55 @@ months = (start_date..end_date).select{|date| date.day == 1}
 months.each do |date|
   year = date.year
   month = date.month
-  open("http://gs.statcounter.com/chart.php?"\
-    "bar=1&device=Desktop&device_hidden=desktop&statType_hidden=browser_version&"\
-    "region_hidden=#{region}&granularity=monthly&statType=Browser%20Version&"\
-    "fromInt=#{year}#{month}&toInt=#{year}#{month}&fromMonthYear=#{year}-#{month}&toMonthYear=#{year}-#{month}&"\
-    "multi-device=true&csv=1") do |file|
-    file.each_line do |line|
-      browser, percents = line.split(',')
-      bname, bversion = browser.gsub('"','').split(' ')
-      percents = percents.to_f
-      bversion = bversion.to_f
-      next if bname == "Browser"
-      versions = meta[bname]
-      next if !versions
 
-      push_browser = lambda do |bname|
-        browsers[bname] ||= {}
-        browsers[bname][year] ||= {}
-        browsers[bname][year][month] = ((browsers[bname][year][month] || 0) + percents).round(2)
-      end
+  ->{
+    data = CSV.parse(
+      open("http://gs.statcounter.com/chart.php?"\
+        "bar=1&device=Desktop&device_hidden=desktop&statType_hidden=browser_version&"\
+        "region_hidden=#{region}&granularity=monthly&statType=Browser%20Version&"\
+        "fromInt=#{year}#{month}&toInt=#{year}#{month}&fromMonthYear=#{year}-#{month}&toMonthYear=#{year}-#{month}&"\
+        "multi-device=true&csv=1")
+    )
+    data.shift
 
-      version = versions[0]
-      version = version['version'] if version.is_a?(Hash)
-      push_browser.call([bname, 0, version]) if bversion < version && bversion > 0
-      versions[1..-1].each_with_index do |version, i|
-        version = version['version'] if version.is_a?(Hash)
-        version_named = version
-        if versions[i].is_a?(Hash)
-          versionsi = versions[i]['version']
-          version_named = versionsi if versions[i]['single']
-        else
-          versionsi = versions[i]
-        end
-        push_browser.call([bname, versionsi, version_named]) if bversion < version && bversion >= versionsi
-      end
-      version = versions[-1]
-      push_browser.call([bname, version]) if bversion >= version
+    data.each_with_index do |line, index|
+      name, version = line[0].split(' ')
+      data[index] = {
+        :name => name,
+        :version => version.to_f,
+        :percents => line[1].to_f,
+      }
     end
+  }.call.each do |browser|
+    next unless meta[browser[:name]]
+
+    versions = meta[browser[:name]]
+
+    push_browser = lambda do |key|
+      bdata = (browsers[key] ||= {})
+      bdata[year] ||= {}
+      bdata[year][month] = ((bdata[year][month] || 0) + browser[:percents]).round(2)
+    end
+
+    bname = browser[:name]
+    bversion = browser[:version]
+
+    version = versions[0]
+    version = version['version'] if version.is_a?(Hash)
+    push_browser.call([bname, 0, version]) if bversion < version && bversion > 0
+    versions[1..-1].each_with_index do |version, i|
+      version = version['version'] if version.is_a?(Hash)
+      version_named = version
+      if versions[i].is_a?(Hash)
+        versionsi = versions[i]['version']
+        version_named = versionsi if versions[i]['single']
+      else
+        versionsi = versions[i]
+      end
+      push_browser.call([bname, versionsi, version_named]) if bversion < version && bversion >= versionsi
+    end
+    version = versions[-1]
+    push_browser.call([bname, version]) if bversion >= version
   end
 end
 
