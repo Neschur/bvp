@@ -4,37 +4,39 @@ require 'open-uri'
 require 'csv'
 require 'optparse'
 require 'json'
-# require 'byebug'
+require 'byebug'
 
 # Part 1 - initializing
-region = 'ww'
-start_date = Date.today.prev_year
-end_date = Date.today
+meta, region, months = ->{
+  region = 'ww'
+  start_date = Date.today.prev_year
+  end_date = Date.today
 
-OptionParser.new do |opts|
-  opts.banner = "Usage: example.rb [options]"
+  OptionParser.new do |opts|
+    opts.banner = "Usage: example.rb [options]"
 
-  opts.on("-s", "--start-date Date", "date of beginning") do |v|
-    start_date = Date.parse(v)
-  end
+    opts.on("-s", "--start-date Date", "date of beginning") do |v|
+      start_date = Date.parse(v)
+    end
 
-  opts.on("-e", "--end-date Date", "date of ending") do |v|
-    end_date = Date.parse(v)
-  end
+    opts.on("-e", "--end-date Date", "date of ending") do |v|
+      end_date = Date.parse(v)
+    end
 
-  opts.on("-r", "--region ww/by/etc", "region, default ww") do |v|
-    region = v.downcase
-  end
-end.parse!
+    opts.on("-r", "--region ww/by/etc", "region, default ww") do |v|
+      region = v.downcase
+    end
+  end.parse!
 
-filename = "meta.#{region}.json"
-filename = "meta.default.json" unless File.exist?(filename)
+  meta = JSON.parse(IO.read(->{
+    filename = "meta.#{region}.json"
+    filename = "meta.default.json" unless File.exist?(region)
+  }.call))
 
-meta = JSON.parse(IO.read(filename))
+  browsers = {}
 
-browsers = {}
-
-months = (start_date..end_date).select{|date| date.day == 1}
+  return meta, region, (start_date..end_date).select{|date| date.day == 1}
+}.call
 
 # Part 2 - calculation version
 
